@@ -31,10 +31,11 @@ class TestKorail(TestCase):
     def setUp(self):
 
         if not (hasattr(self, "koid") and hasattr(self, "kopw")):
-            
-            if os.environ['KORAIL_ID'] and os.environ['KORAIL_PW']:
-                self.koid = os.environ['KORAIL_ID']
-                self.kopw = os.environ['KORAIL_PW']
+            import user
+
+            if user.USER_ID and user.USER_PW:
+                self.koid = user.USER_ID
+                self.kopw = user.USER_PW
                 self.korail = Korail(self.koid, self.kopw, auto_login=False)
             else:
                 raise Exception("env KORAIL_ID, KORAIL_PW not defined")
@@ -109,14 +110,14 @@ class TestKorail(TestCase):
     def test__result_check(self):
         try:
             self.korail._result_check({})
-        except KorailError, e:
+        except KorailError as e:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception as e:
             self.assertTrue(True)
 
         try:
             self.korail._result_check({"strResult": "SUCC", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
-        except Exception, e:
+        except Exception as e:
             self.assertTrue(False)
         else:
             self.assertTrue(True)
@@ -125,7 +126,7 @@ class TestKorail(TestCase):
             self.korail._result_check({"strResult": "FAIL", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
         except KorailError:
             self.assertTrue(True)
-        except Exception, e:
+        except Exception as e:
             self.assertTrue(False)
 
         try:
@@ -134,7 +135,7 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception as e:
             self.assertTrue(False)
 
         try:
@@ -143,17 +144,17 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception as e:
             self.assertTrue(False)
 
     def test_search_train(self):
         trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
-        print trains
+        print(trains)
 
         alltrains = self.korail.search_train_allday("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(alltrains), len(trains), "tomorrow train search")
-        print alltrains
+        print(alltrains)
 
     # def test_reserve(self):
     # self.skipTest("Same to test_cancel")
@@ -174,7 +175,7 @@ class TestKorail(TestCase):
             self.assertIsInstance(reserves, list)
 
             # print reserves
-        except Exception, e:
+        except Exception as e:
             self.fail(e.message)
             # self.skipTest(e.message)
 
@@ -184,17 +185,17 @@ class TestKorail(TestCase):
 
         trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), self.thetime().strftime("%H%M%S"))
 
-        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
+        empty_seats = list(filter(lambda x: "11" in (x.special_seat, x.general_seat), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0])
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")
@@ -209,17 +210,17 @@ class TestKorail(TestCase):
         except NoResultsError:
             self.skipTest("Sold out")
 
-        empty_seats = filter(lambda x: x.has_special_seat(), trains)
+        empty_seats = list(filter(lambda x: x.has_special_seat(), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0], option=ReserveOption.SPECIAL_ONLY)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")
@@ -239,18 +240,18 @@ class TestKorail(TestCase):
         except NoResultsError:
             self.skipTest("Sold out")
 
-        print trains
-        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
+        print(trains)
+        empty_seats = list(filter(lambda x: "11" in (x.special_seat, x.general_seat), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0], passengers=passengers)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")

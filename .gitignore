@@ -22,3 +22,4 @@ test/korail_idpw.txt
 # Personal
 venv/
 
+test/user.py
